@@ -2,6 +2,9 @@
 
 This is a React + TypeScript application for automating accounting journal entry workflows. This system allows users to create and manage tasks that automatically post or reverse journal entries.
 
+<img width="2802" height="1150" alt="CleanShot 2025-10-26 at 01 37 36@2x" src="https://github.com/user-attachments/assets/a026a732-17c7-4f87-9b6d-1b67569ea9a6" />
+
+
 ## 📖 What is a Journal Entry?
 
 In accounting, a **Journal Entry** is a record of a financial transaction in the accounting system. Each entry consists of:
