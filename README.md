@@ -85,7 +85,7 @@ This application simulates an **LLM-powered accounting automation system**. In a
 3. **OTHER**
    - Generic task type
    - When run: Changes status to `COMPLETED`
-   - No proposed action generated
+   - No proposed journal entry generated
 
 ### Task Workflow
 
@@ -95,9 +95,9 @@ This application simulates an **LLM-powered accounting automation system**. In a
 2. Status changes to "RUNNING" (simulates AI processing)
    ↓
 3. After 5 seconds, status changes to "PENDING_ACTION"
-   (or "COMPLETED" for OTHER tasks) - LLM returns a proposed action
+   (or "COMPLETED" for OTHER tasks) - Based on the task type, the LLM returns a proposed journal entry OR a journal entry to revert
    ↓
-4. User clicks "View" to see the proposed action
+4. User clicks "View" to see the proposed journal entry
    ↓
 5. User clicks "Execute Action" to apply the changes
    ↓
@@ -163,7 +163,109 @@ Please enforce this rule throughout your implementation.
 
 ---
 
-### 2. Create Random Journal Entry Generator Algorithm
+### 2. Display Proposed Actions in View Mode
+
+**Problem**: The View panel shows basic task info but doesn't display the proposed action.
+
+**Requirements**:
+
+- When a task has a `proposedAction`, display it clearly in the detail panel
+- For **POST_JOURNAL_ENTRY** tasks:
+  - Show the proposed journal entry (date, description, line items)
+  - Display line items in a table with columns: Account, Debit, Credit, Memo
+  - Show if the entry balances (total debits = total credits)
+- For **REVERSE_JOURNAL_ENTRY** tasks:
+  - Show which journal entry will be reversed
+    - Make sure that the LLM is returning a random `journalEntryId` that exists
+- Add an **"Execute Action"** button that:
+  - Posts the journal entry (for POST tasks)
+  - Removes the journal entry (for REVERSE tasks)
+  - Updates task status to `COMPLETED`
+
+---
+
+### 3. Implement Create Task Form
+
+**Problem**: The "Create Task" button doesn't do anything.
+
+**Requirements**:
+
+- Clicking "Create Task" should open a form using **react-reflex** (similar to View mode)
+- Form fields depend on task type:
+  - **Common fields**: Title, Description, Type (dropdown)
+- Form validation is **required** (use vanilla validation or react-hook-form + zod)
+- After submission:
+  - Create the task using RTK Query mutation
+  - Close the form panel
+- Add a close button (X icon) to cancel creating a task
+
+**Validation Rules**:
+
+- Title: Required
+- Description: Optional
+- Type: Required
+
+---
+
+### 4. Implement Journal Entries Screen
+
+**Problem**: The Journal Entries page is just a placeholder.
+
+**Requirements**:
+
+- Display journal entries as **cards**
+- Each card should show:
+  - Entry number (large, prominent)
+  - Date (formatted nicely)
+  - Description (if present)
+  - Line items table inside the card (consider using the Table component)
+- Line items table columns: Account, Debit, Credit, Memo
+- Format currency properly ($1,234.56)
+
+---
+
+## 🟡 Medium Priority Tasks
+
+### 5. Shareable URLs
+
+**Problem**: Opening a task detail doesn't update the URL.
+
+**Requirements**:
+
+- When a task is selected, update URL: `/tasks?taskId=task-1`
+- When a journal entry is selected, update URL: `/journal-entries?entryId=je-001`
+- On page load, if URL contains an ID, open that detail panel automatically
+- URLs should be shareable (copying and opening in new tab works)
+
+---
+
+### 6. Implement Bulk Run
+
+**Requirements**:
+
+- Add "Run Selected" button to task table header (appears when tasks are selected via checkboxes)
+- Create a new RTK Query mutation: `useRunTasksBulkMutation`
+- Run all selected tasks in parallel
+
+**Important**: Don't just call `runTask` multiple times. Create a dedicated bulk endpoint.
+
+---
+
+### 7. Fix ESLint Errors
+
+**Problem**: There are ESLint errors (some related to enums), but they're not showing in the Vite dev server.
+
+**Requirements**:
+
+- Configure Vite to show ESLint errors during development
+- Fix all ESLint errors
+- **Keep the enums** (don't convert to const objects)
+
+---
+
+## ⭐ Bonus Task
+
+### 8. Create Random Journal Entry Generator Algorithm
 
 **Problem**: Currently, the `SAMPLE_PROPOSED_ENTRY` in `mockData.ts` is hardcoded. We need a function that generates random, balanced journal entries, that better simulates what an LLM would return. This function must replace `SAMPLE_PROPOSED_ENTRY`.
 
@@ -171,7 +273,7 @@ Please enforce this rule throughout your implementation.
 
 Create a function `generateRandomJournalEntry()` that:
 
-- Generates a random journal entry with 2-5 line items
+- Generates a random journal entry with 2-10 line items
 - **ALWAYS ensures total debits equal total credits** (accounting equation must balance)
 - Uses random accounts from the `ACCOUNTS` array in types
 - Generates random amounts between $100 and $10,000
@@ -222,130 +324,6 @@ Create a function `generateRandomJournalEntry()` that:
 }
 // Total Debits: $5,000 | Total Credits: $3,000 ✗ UNBALANCED
 ```
-
----
-
-### 3. Display Proposed Actions in View Mode
-
-**Problem**: The View panel shows basic task info but doesn't display the proposed action.
-
-**Requirements**:
-
-- When a task has a `proposedAction`, display it clearly in the detail panel
-- For **POST_JOURNAL_ENTRY** tasks:
-  - Show the proposed journal entry (date, description, line items)
-  - Display line items in a table with columns: Account, Debit, Credit, Memo
-  - Show if the entry balances (total debits = total credits)
-- For **REVERSE_JOURNAL_ENTRY** tasks:
-  - Show which journal entry will be reversed
-    - Make sure that the LLM is returning a random `journalEntryId` that exists
-- Add an **"Execute Action"** button that:
-  - Posts the journal entry (for POST tasks)
-  - Removes the journal entry (for REVERSE tasks)
-  - Updates task status to `COMPLETED`
-
----
-
-### 4. Implement Create Task Form
-
-**Problem**: The "Create Task" button doesn't do anything.
-
-**Requirements**:
-
-- Clicking "Create Task" should open a form using **react-reflex** (similar to View mode)
-- Form fields depend on task type:
-  - **Common fields**: Title, Description, Type (dropdown)
-- Form validation is **required** (use vanilla validation or react-hook-form + zod)
-- After submission:
-  - Create the task using RTK Query mutation
-  - Close the form panel
-- Add a close button (X icon) to cancel creating a task
-
-**Validation Rules**:
-
-- Title: Required
-- Description: Optional
-- Type: Required
-
----
-
-### 5. Implement Journal Entries Screen
-
-**Problem**: The Journal Entries page is just a placeholder.
-
-**Requirements**:
-
-- Display journal entries as **cards**
-- Each card should show:
-  - Entry number (large, prominent)
-  - Date (formatted nicely)
-  - Description (if present)
-  - Line items table inside the card (consider using the Table component)
-- Line items table columns: Account, Debit, Credit, Memo
-- Format currency properly ($1,234.56)
-
----
-
-## 🟡 Medium Priority Tasks
-
-### 6. Shareable URLs
-
-**Problem**: Opening a task detail doesn't update the URL.
-
-**Requirements**:
-
-- When a task is selected, update URL: `/tasks?taskId=task-1`
-- When a journal entry is selected, update URL: `/journal-entries?entryId=je-001`
-- On page load, if URL contains an ID, open that detail panel automatically
-- URLs should be shareable (copying and opening in new tab works)
-
----
-
-### 7. Implement Bulk Run
-
-**Requirements**:
-
-- Add "Run Selected" button to task table header (appears when tasks are selected via checkboxes)
-- Create a new RTK Query mutation: `useRunTasksBulkMutation`
-- Run all selected tasks in parallel
-
-**Important**: Don't just call `runTask` multiple times. Create a dedicated bulk endpoint.
-
----
-
-### 8. Fix ESLint Errors
-
-**Problem**: There are ESLint errors (some related to enums), but they're not showing in the Vite dev server.
-
-**Requirements**:
-
-- Configure Vite to show ESLint errors during development
-- Fix all ESLint errors
-- **Keep the enums** (don't convert to const objects)
-
----
-
-## ⭐ Bonus Tasks
-
-### 9. Implement Filters
-
-**Requirements**:
-
-- Add filter UI above the task table:
-  - Search input (filters by task title)
-  - Type dropdown (filters by task type)
-- Persist filters in URL: `/tasks?search=payroll&type=POST_JOURNAL_ENTRY`
-- Filters should be shareable (copying URL preserves filters)
-- Clear filters button
-
----
-
-### 10. Persist Data in Local Storage
-
-**Requirements**:
-
-- Save tasks and journal entries to `localStorage` on every change
-- Load from `localStorage` on app startup
 
 ---
 
