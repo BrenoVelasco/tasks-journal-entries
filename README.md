@@ -239,33 +239,9 @@ Please enforce this rule throughout your implementation.
 
 ---
 
-### 6. Implement Bulk Run
-
-**Requirements**:
-
-- Add "Run Selected" button to task table header (appears when tasks are selected via checkboxes)
-- Create a new RTK Query mutation: `useRunTasksBulkMutation`
-- Run all selected tasks in parallel
-
-**Important**: Don't just call `runTask` multiple times. Create a dedicated bulk endpoint.
-
----
-
-### 7. Fix ESLint Errors
-
-**Problem**: There are ESLint errors (some related to enums), but they're not showing in the Vite dev server.
-
-**Requirements**:
-
-- Configure Vite to show ESLint errors during development
-- Fix all ESLint errors
-- **Keep the enums** (don't convert to const objects)
-
----
-
 ## ⭐ Bonus Task
 
-### 8. Create Random Journal Entry Generator Algorithm
+### 6. Create Random Journal Entry Generator Algorithm
 
 **Problem**: Currently, the `SAMPLE_PROPOSED_ENTRY` in `mockData.ts` is hardcoded. We need a function that generates random, balanced journal entries, that better simulates what an LLM would return. This function must replace `SAMPLE_PROPOSED_ENTRY`.
 
